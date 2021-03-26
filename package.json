@@ -2,7 +2,7 @@
   "name": "graphql-mongodb",
   "version": "0.1.0",
   "description": "",
-  "main": "start.js",
+  "main": "index.js",
   "scripts": {
     "startdev": "nodemon --exec babel-node src/index.js",
     "start": "node dist/index.js",
@@ -21,7 +21,6 @@
     "graphql-playground-middleware-express": "^1.7.22",
     "raw-loader": "^4.0.2",
     "serverless-plugin-include-dependencies": "^4.1.0",
-    "webpack": "^5.10.1",
     "webpack-node-externals": "^2.5.2"
   },
   "dependencies": {
@@ -42,7 +41,7 @@
     "graphql-deduplicator": "^2.0.6",
     "graphql-extensions": "^0.12.7",
     "graphql-middleware": "^4.0.2",
-    "graphql-shield": "^7.4.2",
+    "graphql-shield": "^7.4.4",
     "graphql-tag": "^2.11.0",
     "mongodb": "^3.6.3",
     "node-sass": "^5.0.0",
@@ -52,6 +51,7 @@
     "serverless-http": "^2.6.0",
     "serverless-offline": "^6.8.0",
     "serverless-webpack": "^5.3.5",
+    "webpack": "^5.12.2",
     "wordpress-hash-node": "^1.0.0"
   },
   "graphdoc": {

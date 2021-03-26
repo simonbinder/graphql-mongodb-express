@@ -28,10 +28,7 @@ import { makeExecutableSchema, gql } from "apollo-server";
 import {applyMiddleware} from "graphql-middleware";
 import serverless from "serverless-http";
 import { ApolloServer } from "apollo-server-express";
-import caBundle from "./rds-combined-ca-bundle.pem";
 import * as context from "serverless";
-import deflate from "graphql-deduplicator/dist/deflate";
-import {GraphQLExtension} from "graphql-extensions";
 import responseCachePlugin from 'apollo-server-plugin-response-cache';
 
 const app = express()
@@ -88,26 +85,28 @@ const resolvers = {
 }
 
 const isUserAuthenticated = async (request) => {
-    const blog_id = getBlogId(request);
     const b64auth = (request.headers.authorization || '').split(' ')[1] || ''
     const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':')
     if (login) {
-        const user = await getUserByName(blog_id, login);
+        const user = await getUserByName(login);
         return CheckPassword(password, user.password);
     } else return false;
 }
 
 const getUser = async (request) => {
-    const blog_id = getBlogId(request);
     const b64auth = (request.headers.authorization || '').split(' ')[1] || ''
     const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':')
     if (login) {
-        return await getUserByName(blog_id, login);
+        return await getUserByName(login);
     } else return null;
 }
 
 const URL = `mongodb://${process.env.DOCUMENTDB_USER}:${process.env.DOCUMENTDB_PASSWORD}@${process.env.DOCUMENTDB_URL}:27017`;
+const localURL = 'mongodb://localhost:27017';
+/*
 const client = new MongoClient(URL, { useNewUrlParser: true, ssl: true, sslCA: caBundle, useUnifiedTopology: true });
+*/
+const client = new MongoClient(localURL);
 
 const getDb = async () => {
     if (!client.isConnected()) {
@@ -124,10 +123,10 @@ const getDb = async () => {
     }
 }
 
-const getUserByName = async (blog_id, name) => {
+const getUserByName = async (name) => {
     const db = await getDb();
-    const Users = db.collection(`users_${blog_id}`);
-    return prepare(await Users.findOne({'login': name}))
+    const Users = db.collection('users');
+    return prepare(await Users.findOne({'login': name}));
 }
 
 const isAuthenticated = rule({cache: 'contextual'})(
@@ -191,29 +190,21 @@ const schema = applyMiddleware(
 
 context.callbackWaitsForEmptyEventLoop = false;
 
-class DeduplicateResponseExtension extends GraphQLExtension {
-    willSendResponse(o) {
-        const { context, graphqlResponse } = o
-        const data = deflate(graphqlResponse.data)
-        return {
-            ...o,
-            graphqlResponse: {
-                ...graphqlResponse,
-                data,
-            },
-        }
-    }
-}
-
-const server = new ApolloServer({
-    schema,
-    context: ({req}) => ({
-        isUserAuthenticated: isUserAuthenticated(req), user: getUser(req), db: getDb()
-    }),
-    plugins: [responseCachePlugin()],
-    extensions: [() => new DeduplicateResponseExtension()],
-});
-
-server.applyMiddleware({app, path: "/"});
 const handler = serverless(app);
 export {handler};
+const PORT = 3002;
+const homePath = '/graphiql'
+export const start = async () => {
+    const server = new ApolloServer({
+        schema,
+        context: ({req}) => ({
+            isUserAuthenticated: isUserAuthenticated(req), user: getUser(req), db: getDb()
+        }),
+        plugins: [responseCachePlugin()],
+    });
+
+    server.applyMiddleware({app, path: "/"});
+    await app.listen(PORT, () => {
+        console.log(`Visit ${URL}:${PORT}${homePath}`)
+    })
+}
