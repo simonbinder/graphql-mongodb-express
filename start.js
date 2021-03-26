@@ -101,11 +101,7 @@ const getUser = async (request) => {
     } else return null;
 }
 
-const URL = `mongodb://${process.env.DOCUMENTDB_USER}:${process.env.DOCUMENTDB_PASSWORD}@${process.env.DOCUMENTDB_URL}:27017`;
 const localURL = 'mongodb://localhost:27017';
-/*
-const client = new MongoClient(URL, { useNewUrlParser: true, ssl: true, sslCA: caBundle, useUnifiedTopology: true });
-*/
 const client = new MongoClient(localURL);
 
 const getDb = async () => {

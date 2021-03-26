@@ -1,6 +1,6 @@
 # GraphQL-MongoDB-Example
 
-All the important code is in `src/start.js`.
+All the important code is in `start.js`.
 
 Install, build and run:
 
